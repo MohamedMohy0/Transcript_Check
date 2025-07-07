@@ -75,8 +75,7 @@ def classify_receipt(pdf_bytes: bytes) -> str:
 
     
     if is_pdf_text_based(pdf_bytes):
-        if "GPL" in prproducer or "GPL" in creator:
-             return "Fake"
+
         if "JasperReports Library" in creator or "JasperReports Library" in producer:
             creator = producer = "JasperReports Library"
 
@@ -86,7 +85,9 @@ def classify_receipt(pdf_bytes: bytes) -> str:
             obj_matches = re.findall(rb"\n(\d+)\s+\d+\s+obj", pdf_bytes)
             return "Original" if len(obj_matches) == 11 else "Fake"
 
-
+        if ("GPL" in producer) or ("GPL" in creator):
+             return "Fake"
+            
         if not creation_date or not mod_date or not creator or not producer or ("PDFsharp" in producer):
             edited = (b"/AcroForm" in pdf_bytes) or (pdf_bytes.count(b"%%EOF") > 1)
             return "Fake" if edited else "Original"
