@@ -86,7 +86,7 @@ def classify_receipt(pdf_bytes: bytes) -> str:
             return "Original" if len(obj_matches) == 11 else "Fake"
 
 
-        if not creation_date or not mod_date or not creator or not producer:
+        if not creation_date or not mod_date or not creator or not producer or "PDFsharp" in producer:
             edited = (b"/AcroForm" in pdf_bytes) or (pdf_bytes.count(b"%%EOF") > 1)
             return "Fake" if edited else "Original"
 
