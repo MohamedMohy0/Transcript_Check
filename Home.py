@@ -75,7 +75,8 @@ def classify_receipt(pdf_bytes: bytes) -> str:
 
     
     if is_pdf_text_based(pdf_bytes):
-        
+        if "GPL" in prproducer or "GPL" in creator:
+             return "Fake"
         if "JasperReports Library" in creator or "JasperReports Library" in producer:
             creator = producer = "JasperReports Library"
 
