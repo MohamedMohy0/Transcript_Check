@@ -8,7 +8,7 @@ import time
 from io import BytesIO
 
 
-st.set_page_config(page_title="كشف الوصولات", layout="centered")
+st.set_page_config(page_title="فحص الوصولات", layout="centered")
 
 
 st.markdown(
