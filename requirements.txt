@@ -1,5 +1,4 @@
 streamlit
 pikepdf
 PyPDF2
-re
-fitz
+pymupdf
