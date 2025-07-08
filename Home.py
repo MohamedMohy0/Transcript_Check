@@ -41,7 +41,7 @@ def is_QIB(pdf_bytes: bytes) -> bool:
     return False
 
 def deep_pdf_scan(filepath):
-    with open(filepath, "rb") as f:
+    with fitz.open(stream=pdf_bytes, filetype="pdf") as f:
         raw = f.read()
     xref_count = raw.count(b"xref")
     return xref_count
