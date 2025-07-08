@@ -40,11 +40,8 @@ def is_QIB(pdf_bytes: bytes) -> bool:
                 return True
     return False
 
-def deep_pdf_scan(filepath):
-    with fitz.open(stream=pdf_bytes, filetype="pdf") as f:
-        raw = f.read()
-    xref_count = raw.count(b"xref")
-    return xref_count
+def deep_pdf_scan(pdf_bytes):
+    return pdf_bytes.count(b"xref")
 
 def is_pdf_text_based(pdf_bytes: bytes) -> bool:
     with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
@@ -98,8 +95,8 @@ def classify_receipt(pdf_bytes: bytes) -> str:
             return "Original" if len(obj_matches) == 11 else "Fake"
             
         if is_QIB(pdf_bytes):
-            tables=deep_pdf_scan(pdf_bytes)
-            if tables==2:
+            tables = deep_pdf_scan(pdf_bytes)
+            if tables == 2:
                 return "Original"
             else:
                 return "Fake"
