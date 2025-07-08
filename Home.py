@@ -32,7 +32,19 @@ def is_STC(pdf_bytes: bytes) -> bool:
             if "stc Bank" in page.get_text():
                 return True
     return False
+    
+def is_QIB(pdf_bytes: bytes) -> bool:
+    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+        for page in doc:
+            if "QIB Mobile App" in page.get_text():
+                return True
+    return False
 
+def deep_pdf_scan(filepath):
+    with open(filepath, "rb") as f:
+        raw = f.read()
+    xref_count = raw.count(b"xref")
+    return xref_count
 
 def is_pdf_text_based(pdf_bytes: bytes) -> bool:
     with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
@@ -84,7 +96,13 @@ def classify_receipt(pdf_bytes: bytes) -> str:
             
             obj_matches = re.findall(rb"\n(\d+)\s+\d+\s+obj", pdf_bytes)
             return "Original" if len(obj_matches) == 11 else "Fake"
-
+            
+        if is_QIB(pdf_bytes):
+            tables=deep_pdf_scan(pdf_bytes)
+            if tables==2:
+                return "Original"
+            else:
+                return "Fake"
         if ("GPL" in producer) or ("GPL" in creator):
              return "Fake"
             
