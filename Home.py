@@ -88,7 +88,10 @@ def classify_receipt(pdf_bytes: bytes) -> str:
         if "JasperReports Library" in creator or "JasperReports Library" in producer:
             creator = producer = "JasperReports Library"
 
-        
+        if "Microsoft Word" in creator or "Microsoft Word" in producer:
+            return "Fake"
+        if "Canva" in creator or "Canva" in producer:
+            return "Fake"
         if is_STC(pdf_bytes):
             
             obj_matches = re.findall(rb"\n(\d+)\s+\d+\s+obj", pdf_bytes)
