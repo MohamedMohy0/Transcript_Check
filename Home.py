@@ -32,6 +32,13 @@ def is_STC(pdf_bytes: bytes) -> bool:
             if "stc Bank" in page.get_text():
                 return True
     return False
+
+def is_ABU(pdf_bytes: bytes) -> bool:
+    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+        for page in doc:
+            if"ﻣﺼﺮف أﺑﻮﻇﺒﻲ اﻟﺈﺳﻼﻣﻲ" in text or "AbuDhabiIslamicBank" in text:
+                return True
+    return False 
     
 def is_QIB(pdf_bytes: bytes) -> bool:
     with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
@@ -96,6 +103,11 @@ def classify_receipt(pdf_bytes: bytes) -> str:
             
             obj_matches = re.findall(rb"\n(\d+)\s+\d+\s+obj", pdf_bytes)
             return "Original" if len(obj_matches) == 11 else "Fake"
+        if is_ABU(pdf_bytes):
+            
+            obj_matches = re.findall(rb"\n(\d+)\s+\d+\s+obj", pdf_bytes)
+            return "Original" if len(obj_matches) == 17 else "Fake"
+        
             
         if is_QIB(pdf_bytes):
             tables = deep_pdf_scan(pdf_bytes)
