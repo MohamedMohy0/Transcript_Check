@@ -36,7 +36,7 @@ def is_STC(pdf_bytes: bytes) -> bool:
 def is_ABU(pdf_bytes: bytes) -> bool:
     with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
         for page in doc:
-            if"ﻣﺼﺮف أﺑﻮﻇﺒﻲ اﻟﺈﺳﻼﻣﻲ" in text or "AbuDhabiIslamicBank" in text:
+            if"ﻣﺼﺮف أﺑﻮﻇﺒﻲ اﻟﺈﺳﻼﻣﻲ" in page.get_text() or "AbuDhabiIslamicBank" in page.get_text():
                 return True
     return False 
     
