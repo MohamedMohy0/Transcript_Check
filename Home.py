@@ -61,25 +61,45 @@ def is_pdf_text_based(pdf_bytes: bytes) -> bool:
 def count_pdf_pages(pdf_bytes: bytes) -> int:
    
     return len(PdfReader(BytesIO(pdf_bytes)).pages)
-def count_fingerprints(pdf_bytes: bytes) -> int:
+def analyze_fingerprints(pdf_bytes: bytes) -> dict:
     """
-    تستخرج عدد البصمات (Fingerprints) من ملف PDF.
-    الملف السليم عادةً يحتوي على بصمة واحدة.
-    الملف المعدل أو المعاد إنشاؤه قد يحتوي على بصمتين أو أكثر.
+    تحليل بصمات الملف وإرجاع حالتها باستخدام PyPDF2 (أكثر دقة من pikepdf)
+    
+    العودة:
+        {
+            "count": 2,
+            "fingerprint1": "...",
+            "fingerprint2": "...",
+            "identical": True/False,
+            "status": "Original" / "Modified" / "Unknown"
+        }
     """
     try:
-        with pikepdf.open(BytesIO(pdf_bytes)) as pdf:
-            # محاولة الحصول على ID من document info
-            doc_id = pdf.docinfo.get("/ID")
-            if doc_id:
-                # إذا كان ID عبارة عن قائمة (مثلاً [ID1, ID2])
-                if isinstance(doc_id, (list, tuple)):
-                    return len([x for x in doc_id if x])
-                # إذا كان ID واحد فقط
-                return 1
-            return 0
-    except Exception:
-        return 0
+        from PyPDF2 import PdfReader
+        reader = PdfReader(BytesIO(pdf_bytes))
+        trailer = reader.trailer
+        
+        if '/ID' not in trailer:
+            return {"count": 0, "status": "Unknown", "error": "No /ID found"}
+        
+        id_array = trailer['/ID']
+        
+        if not isinstance(id_array, (list, tuple)) or len(id_array) < 2:
+            return {"count": len(id_array) if id_array else 0, "status": "Unknown"}
+        
+        fp1 = str(id_array[0])
+        fp2 = str(id_array[1])
+        identical = (fp1 == fp2)
+        
+        return {
+            "count": len(id_array),
+            "fingerprint1": fp1,
+            "fingerprint2": fp2,
+            "identical": identical,
+            "status": "Original" if identical else "Modified"
+        }
+    except Exception as e:
+        return {"count": 0, "status": "Unknown", "error": str(e)}
 
 def parse_pdf_date(raw_date) -> datetime | str | None:
 
@@ -99,10 +119,10 @@ def classify_receipt(pdf_bytes: bytes) -> str:
     if count_pdf_pages(pdf_bytes) > 1:
         return "That is Not A Receipt"
 
-    fingerprint_count = count_fingerprints(pdf_bytes)
+    fingerprint_result = analyze_fingerprints(pdf_bytes)
     
-    # إذا كان عدد البصمات > 1 => الملف معدل أو معاد إنشاؤه
-    if fingerprint_count > 1:
+    # إذا كانت البصمتان مختلفتين → الملف معدل قطعاً
+    if fingerprint_result.get("status") == "Modified":
         return "Fake"
     with pikepdf.open(BytesIO(pdf_bytes)) as pdf:
         info = pdf.docinfo
