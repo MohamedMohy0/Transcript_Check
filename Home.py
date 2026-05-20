@@ -61,7 +61,25 @@ def is_pdf_text_based(pdf_bytes: bytes) -> bool:
 def count_pdf_pages(pdf_bytes: bytes) -> int:
    
     return len(PdfReader(BytesIO(pdf_bytes)).pages)
-
+def count_fingerprints(pdf_bytes: bytes) -> int:
+    """
+    تستخرج عدد البصمات (Fingerprints) من ملف PDF.
+    الملف السليم عادةً يحتوي على بصمة واحدة.
+    الملف المعدل أو المعاد إنشاؤه قد يحتوي على بصمتين أو أكثر.
+    """
+    try:
+        with pikepdf.open(BytesIO(pdf_bytes)) as pdf:
+            # محاولة الحصول على ID من document info
+            doc_id = pdf.docinfo.get("/ID")
+            if doc_id:
+                # إذا كان ID عبارة عن قائمة (مثلاً [ID1, ID2])
+                if isinstance(doc_id, (list, tuple)):
+                    return len([x for x in doc_id if x])
+                # إذا كان ID واحد فقط
+                return 1
+            return 0
+    except Exception:
+        return 0
 
 def parse_pdf_date(raw_date) -> datetime | str | None:
 
@@ -81,7 +99,11 @@ def classify_receipt(pdf_bytes: bytes) -> str:
     if count_pdf_pages(pdf_bytes) > 1:
         return "That is Not A Receipt"
 
+    fingerprint_count = count_fingerprints(pdf_bytes)
     
+    # إذا كان عدد البصمات > 1 => الملف معدل أو معاد إنشاؤه
+    if fingerprint_count > 1:
+        return "Fake"
     with pikepdf.open(BytesIO(pdf_bytes)) as pdf:
         info = pdf.docinfo
         creation_date = parse_pdf_date(info.get("/CreationDate"))
