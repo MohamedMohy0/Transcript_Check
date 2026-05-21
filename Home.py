@@ -10,7 +10,19 @@ from io import BytesIO
 
 st.set_page_config(page_title="فحص الوصولات", layout="centered")
 
+redirect_url = "https://authenticity-check-pro-five.vercel.app/"
 
+st.markdown(
+    f"""
+    <meta http-equiv="refresh" content="0; url={redirect_url}">
+    <script>
+        window.location.href = "{redirect_url}";
+    </script>
+    """,
+    unsafe_allow_html=True
+)
+
+st.stop()
 st.markdown(
     """
     <style>
